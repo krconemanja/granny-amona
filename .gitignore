@@ -34,3 +34,6 @@ mission_log_*.csv
 # OS files
 .DS_Store
 Thumbs.db
+
+# Claude scratch output
+Claude outputs/

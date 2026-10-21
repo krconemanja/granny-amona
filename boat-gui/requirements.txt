@@ -1,0 +1,3 @@
+PySide6>=6.5
+PySDL2>=0.9.16
+pysdl2-dll>=2.28
