@@ -81,7 +81,7 @@ def compute_calibration(x_N, x_S, x_W, x_U, inclination_deg=INCLINATION_DEG):
     b = -(x_N + x_S) / 2.0
     X = np.column_stack((x_N + b, x_W + b, x_U + b))
     Y = np.column_stack(reference_fields(inclination_deg))
-    A = X @ np.linalg.inv(Y)
+    A = np.dot(X, np.linalg.inv(Y))
     return A, b
 
 
