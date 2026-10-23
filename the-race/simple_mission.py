@@ -1,19 +1,22 @@
-"""Simple test mission: go to ONE goal and stop there.
+"""Simple test mission: go to ONE goal, then come back home.
 
 No twin, no route: GPS -> local frame -> control() -> motors.
-The local frame is centred on the first GPS fix: x = East, y = North (metres).
+Home is where the boat is when R is pressed the FIRST time (so it is in the
+water, not on the dock). The local frame is centred on home: x = East, y = North (m).
 
 Driven from the laptop with client.py (same keys as mission.py):
-    R  AUTO: go to the goal (start / resume)
-    P  MANUAL: drive with W A S D. If the laptop is silent for LINK_TIMEOUT -> STOP
+    R         start / resume: AUTO (to the goal) or BACK_HOME, whichever was running
+    P         MANUAL: drive with W A S D. If the laptop is silent for LINK_TIMEOUT,
+              it resumes AUTO / BACK_HOME (STOP if R was never pressed)
     SPACE, Q  STOP: motors off
-It starts in STOP and goes back to STOP when the goal is reached.
+AUTO -> BACK_HOME at the goal, BACK_HOME -> STOP at home. R again does another
+round trip (same home).
 
 Usage:
     python3 simple_mission.py 48.19950 -3.01450               goal in lat lon (degrees)
-    python3 simple_mission.py 20 30 --local                   goal 20 m East, 30 m North of start
+    python3 simple_mission.py 20 30 --local                   goal 20 m East, 30 m North of home
     python3 simple_mission.py 20 30 --local --sim             on the laptop, simulated boat
-    python3 simple_mission.py 20 30 --local --sim --autostart AUTO at once, quit at the goal
+    python3 simple_mission.py 20 30 --local --sim --autostart AUTO at the first fix, quit at home
 
 Ctrl+C stops the motors.
 """
@@ -36,7 +39,7 @@ RADIUS = 4.0       # m, goal reached (GPS noise is ~2-3 m)
 GPS_TIMEOUT = 10.0 # s without a fix -> motors off
 SIM_HOME = (48.19915, -3.01488)
 PORT = 5000
-LINK_TIMEOUT = 2.0   # s without a packet in MANUAL -> STOP
+LINK_TIMEOUT = 2.0   # s without a packet in MANUAL -> resume AUTO / BACK_HOME
 STATUS_PERIOD = 0.5  # s between two status packets to the laptop
 
 STOP, AUTO, MANUAL, BACK_HOME = 'STOP', 'AUTO', 'MANUAL', 'BACK_HOME'
@@ -97,25 +100,34 @@ def control (x, goal, speed):
 
 
 def main():
-    ap = argparse.ArgumentParser(description='Go to one goal with control()')
+    ap = argparse.ArgumentParser(description='Go to one goal with control(), then back home')
     ap.add_argument('a', type=float, help='goal latitude (or x in m with --local)')
     ap.add_argument('b', type=float, help='goal longitude (or y in m with --local)')
-    ap.add_argument('--local', action='store_true', help='goal in metres from the start')
+    ap.add_argument('--local', action='store_true', help='goal in metres from home')
     ap.add_argument('--speed', type=float, default=0.6, help='speed passed to control() - must be between 0 and 1')
     ap.add_argument('--sim', action='store_true', help='simulated boat, no hardware')
     ap.add_argument('--port', type=int, default=PORT)
     ap.add_argument('--autostart', action='store_true',
-                    help='AUTO as soon as the GPS is there, quit at the goal')
+                    help='AUTO at the first GPS fix (home = there), quit when back home')
     args = ap.parse_args()
 
     boat = SimBoat(*SIM_HOME) if args.sim else RealBoat()
     link = Link(args.port)
     print('Listening on UDP port %d%s' % (args.port, ' (SIMULATION)' if args.sim else ''))
-    home, goal, xy = None, None, None
+    latlon = None             # last GPS fix (lat, lon)
+    home, goal = None, None   # home (lat, lon), goal (x, y) in m: set at the first R
+    xy = None                 # position (x, y) in m from home
     gps_t = time.time()
-    mode = AUTO if args.autostart else STOP
-    manual = (0, 0)  # last WASD command (left, right)
+    mode = STOP
+    leg = AUTO                # the automatic mode R / link loss resumes: AUTO or BACK_HOME
+    start = args.autostart    # set home and go at the next fix
+    manual = (0, 0)           # last WASD command (left, right)
     status_t = 0.0
+
+    def set_mode(new, why):
+        if new != mode:
+            print('%s -> %s (%s)' % (mode, new, why))
+        return new
 
     try:
         while True:
@@ -129,45 +141,54 @@ def main():
                         manual = (clamp(words[1]), clamp(words[2]))
                     except ValueError:
                         pass
-                elif words[0] == 'MODE' and len(words) == 2 and words[1] in (STOP, AUTO, MANUAL):
-                    if words[1] == MANUAL and mode != MANUAL:
-                        manual = (0, 0)
-                    if words[1] != mode:
-                        print('%s -> %s (laptop)' % (mode, words[1]))
-                    mode = words[1]
+                elif words[0] == 'MODE' and len(words) == 2:
+                    if words[1] == AUTO:
+                        if home is None:
+                            start = True  # home is set below, from the GPS
+                        else:
+                            mode = set_mode(leg, 'laptop')
+                    elif words[1] in (STOP, MANUAL):
+                        if words[1] == MANUAL and mode != MANUAL:
+                            manual = (0, 0)
+                        start = False
+                        mode = set_mode(words[1], 'laptop')
             if mode == MANUAL and link.lost():
-                print('MANUAL -> STOP (link lost)')
-                mode = STOP
+                mode = set_mode(leg if home else STOP, 'link lost')
 
-            # GPS -> local frame (origin = first fix)
+            # GPS -> local frame (origin = home)
             fix = boat.read_gps()
             if fix:
-                gps_t = now
-                if home is None:
-                    home = fix
-                    goal = (args.a, args.b) if args.local else to_local(args.a, args.b, *home)
-                    print('Home %.6f %.6f  goal x=%.1f y=%.1f m' % (home + goal))
-                xy = to_local(fix[0], fix[1], *home)
+                latlon, gps_t = fix, now
+            if start and latlon and now - gps_t < GPS_TIMEOUT:
+                start = False
+                home = latlon
+                goal = (args.a, args.b) if args.local else to_local(args.a, args.b, *home)
+                print('Home %.6f %.6f  goal x=%.1f y=%.1f m' % (home + goal))
+                mode = set_mode(AUTO, 'start')
+            if home:
+                xy = to_local(latlon[0], latlon[1], *home)
             theta = boat.read_heading()
 
-            dist = np.hypot(goal[0] - xy[0], goal[1] - xy[1]) if xy else None
+            target = goal if leg == AUTO else (0.0, 0.0)
+            dist = np.hypot(target[0] - xy[0], target[1] - xy[1]) if xy else None
             left = right = 0
             if mode == MANUAL:
                 left, right = manual
             elif mode == STOP:
                 pass
-            elif xy is None:
-                print('waiting for GPS...')
             elif now - gps_t > GPS_TIMEOUT:
                 print('no GPS for %.0f s, motors off' % GPS_TIMEOUT)
-            elif dist < RADIUS:
-                print('goal reached, AUTO -> STOP')
-                mode = BACK_HOME
+            elif dist < RADIUS and mode == AUTO:
+                leg = BACK_HOME
+                mode = set_mode(BACK_HOME, 'goal reached')
+            elif dist < RADIUS and mode == BACK_HOME:
+                leg = AUTO  # R again = another round trip
+                mode = set_mode(STOP, 'home reached')
                 if args.autostart:
                     break
             else:
                 x = np.array([[xy[0]], [xy[1]], [theta]])
-                u1, u2 = control(x, goal, args.speed).flatten()  # u1 right, u2 left
+                u1, u2 = control(x, target, args.speed).flatten()  # u1 right, u2 left
                 right = int(np.clip(u1 * MAX_PWM, -MAX_PWM, MAX_PWM))
                 left = int(np.clip(u2 * MAX_PWM, -MAX_PWM, MAX_PWM))
             boat.set_motors(left, right)
@@ -175,18 +196,20 @@ def main():
             # status to the laptop
             if now - status_t >= STATUS_PERIOD:
                 status_t = now
-                if xy is None:
+                if latlon is None:
                     link.send('%s waiting for GPS' % mode)
+                elif home is None:
+                    link.send('%s GPS ok, R sets home' % mode)
                 else:
-                    link.send('%s goal %.0f m  gps %.0f s  L=%d R=%d'
-                              % (mode, dist, now - gps_t, left, right))
+                    link.send('%s %s %.0f m  gps %.0f s  L=%d R=%d'
+                              % (mode, 'goal' if leg == AUTO else 'home', dist,
+                                 now - gps_t, left, right))
 
             time.sleep(max(0.0, DT - (time.time() - now)))
     except KeyboardInterrupt:
         pass
     finally:
         boat.set_motors(0, 0)
-
 
 if __name__ == '__main__':
     main()
