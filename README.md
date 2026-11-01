@@ -60,10 +60,10 @@ waits for the laptop:
 
 ## Try it without a boat
 
-Install the dependencies (Python 3):
+Needs Python 3 and NumPy:
 
 ```bash
-pip install -r requirements.txt
+pip install numpy
 ```
 
 Then, in two terminals:
