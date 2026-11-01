@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SIMULATION ONLY: not checked against the shoreline. Draw real missions in Google Earth. -->
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2">
+<Document>
+  <name>sim square</name>
+  <Placemark>
+    <name>dock</name>
+    <Point><coordinates>-3.0149300,48.1991110,0</coordinates></Point>
+  </Placemark>
+  <Placemark>
+    <name>mission</name>
+    <LineString>
+      <tessellate>1</tessellate>
+      <coordinates>
+        -3.0149300,48.1991110,0 -3.0149300,48.1994707,0 -3.0143903,48.1994707,0 -3.0143903,48.1991110,0 -3.0149030,48.1991380,0
+      </coordinates>
+    </LineString>
+  </Placemark>
+</Document>
+</kml>
