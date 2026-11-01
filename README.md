@@ -140,3 +140,9 @@ The Steam Deck GUI ([`boat-gui/`](boat-gui/)) is Unai's work.
 
 Hardware drivers by the ENSTA Bretagne teaching staff, see
 [`drivers-ddboat-v2/`](drivers-ddboat-v2/).
+
+### Why "granny-amona"?
+
+The first time we put the boat on the lake to test our program, it crawled
+along and the connection was slow and laggy, so we started calling it the
+granny. *Amona* is Basque for grandmother, a nod to Unai.
