@@ -1,6 +1,6 @@
 """Mission: go to ONE goal, then come back home.
 
-No twin, no route: GPS -> local frame -> control() -> motors.
+GPS -> local frame -> control() -> motors.
 Home is where the boat is when R is pressed the FIRST time (so it is in the
 water, not on the dock). The local frame is centred on home: x = East, y = North (m).
 
@@ -84,7 +84,7 @@ def clamp(v):
 
 
 def control (x, goal, speed):
-    xr,yr,theta = x.flatten()
+    theta = x[2, 0]
 
     goal_angle = np.arctan2(goal[1]-x[1], goal[0]-x[0])
 
@@ -95,7 +95,6 @@ def control (x, goal, speed):
         distance = 0
     u1 = (speed + e_angle) * min(distance, 1)
     u2 = (speed - e_angle) * min(distance, 1)
-    #print(u1, " ", u2, " ", distance) #Debugging
     return np.array([[u1],[u2]])
 
 

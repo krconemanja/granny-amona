@@ -46,8 +46,7 @@ class RealBoat(object):
 
 
 class SimBoat(object):
-    """The model plus what the twin does not know: a water current, a slower
-    and faster turning boat, GPS noise (1 fix/s) and compass noise."""
+    """The tank model plus a water current, GPS noise (1 fix/s) and compass noise."""
 
     def __init__(self, home_lat, home_lon):
         self.home = (home_lat, home_lon)
@@ -70,6 +69,6 @@ class SimBoat(object):
         self.u = (right / 255.0, left / 255.0)
 
     def step(self, dt):
-        self.x = self.x + dt * f(self.x, self.u, k_speed=0.5, k_turn=1.3)
+        self.x = self.x + dt * f(self.x, self.u)
         self.x[:2] += dt * np.array([0.15, 0.05])  # water current, m/s
         self.t += dt

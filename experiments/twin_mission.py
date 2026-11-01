@@ -16,16 +16,19 @@ Every loop (DT = 0.1 s):
     4. motors from the mode       5. status to the laptop + one log line
 
 Usage:
-    python3 mission.py missions/lake.kml                  on the boat
-    python3 mission.py missions/sim_square.kml --sim      on the laptop
-    python3 mission.py missions/sim_square.kml --sim --autostart --speed 20
+    python3 twin_mission.py missions/lake.kml                  on the boat
+    python3 twin_mission.py missions/sim_square.kml --sim      on the laptop
+    python3 twin_mission.py missions/sim_square.kml --sim --autostart --speed 20
 """
 import argparse
+import os
 import socket
+import sys
 import time
 
 import numpy as np
 
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 from boat_io import MAX_PWM, RealBoat, SimBoat
 from control import control, distance, next_waypoint
 from geo import build_route, to_local

@@ -52,7 +52,7 @@ waits for the laptop:
 | [`lib/calibration.py`](lib/calibration.py) | boat | Compass calibration, saves `calib.npz` |
 | [`lib/imu.py`](lib/imu.py) | boat | Calibrated, tilt-compensated heading |
 | [`lib/boat_io.py`](lib/boat_io.py) | both | Real boat and simulated boat, same interface |
-| [`lib/geo.py`](lib/geo.py) | both | GPS ↔ local metres, Google Earth `.kml` paths |
+| [`lib/geo.py`](lib/geo.py) | both | GPS ↔ local metres |
 | [`lib/model.py`](lib/model.py) | both | Tank model of the boat (used by the simulation) |
 | [`drivers-ddboat-v2/`](drivers-ddboat-v2/) | boat | Hardware drivers provided by the course |
 | [`boat-gui/`](boat-gui/) | Steam Deck / laptop | Steam Deck controller with map and telemetry (separate tool, see its README) |
