@@ -1,10 +1,10 @@
-"""Simple test mission: go to ONE goal, then come back home.
+"""Mission: go to ONE goal, then come back home.
 
 No twin, no route: GPS -> local frame -> control() -> motors.
 Home is where the boat is when R is pressed the FIRST time (so it is in the
 water, not on the dock). The local frame is centred on home: x = East, y = North (m).
 
-Driven from the laptop with client.py (same keys as mission.py):
+Driven from the laptop with client.py:
     R         start / resume: AUTO (to the goal) or BACK_HOME, whichever was running
     P         MANUAL: drive with W A S D. If the laptop is silent for LINK_TIMEOUT,
               it resumes AUTO / BACK_HOME (STOP if R was never pressed)
@@ -13,10 +13,10 @@ AUTO -> BACK_HOME at the goal, BACK_HOME -> STOP at home. R again does another
 round trip (same home).
 
 Usage:
-    python3 simple_mission.py 48.19950 -3.01450               goal in lat lon (degrees)
-    python3 simple_mission.py 20 30 --local                   goal 20 m East, 30 m North of home
-    python3 simple_mission.py 20 30 --local --sim             on the laptop, simulated boat
-    python3 simple_mission.py 20 30 --local --sim --autostart AUTO at the first fix, quit at home
+    python3 mission.py 48.19950 -3.01450               goal in lat lon (degrees)
+    python3 mission.py 20 30 --local                   goal 20 m East, 30 m North of home
+    python3 mission.py 20 30 --local --sim             on the laptop, simulated boat
+    python3 mission.py 20 30 --local --sim --autostart AUTO at the first fix, quit at home
 
 Ctrl+C stops the motors.
 """
@@ -95,7 +95,7 @@ def control (x, goal, speed):
         distance = 0
     u1 = (speed + e_angle) * min(distance, 1)
     u2 = (speed - e_angle) * min(distance, 1)
-    print(u1, " ", u2, " ", distance)
+    #print(u1, " ", u2, " ", distance) #Debugging
     return np.array([[u1],[u2]])
 
 
