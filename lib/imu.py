@@ -7,7 +7,7 @@ Usage in other scripts:
     from imu import heading
     psi = heading()
 Run directly to print the raw data and the heading:
-    python3 imu.py
+    python3 lib/imu.py
 """
 import sys
 import os
@@ -16,7 +16,7 @@ import time
 import numpy as np
 
 # access to the drivers
-sys.path.append(os.path.join(os.path.dirname(__file__), 'drivers-ddboat-v2'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'drivers-ddboat-v2'))
 
 import imu9_driver_v2 as imudrv
 from calibration import load_calibration, calibrate
@@ -71,5 +71,5 @@ if __name__ == '__main__':
         phi, theta = tilt(accel)
         print('mag=%s accel=%s gyro=%s | roll=%6.1f pitch=%6.1f | heading=%6.1f tilt-comp=%6.1f deg'
               % (mag, accel, gyro, np.degrees(phi), np.degrees(theta),
-                 np.degrees(heading()), np.degrees(heading(tilt_compensation=True))))
+                 np.degrees(heading(tilt_compensation=False)), np.degrees(heading())))
         time.sleep(0.1)

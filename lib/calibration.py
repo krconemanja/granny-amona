@@ -20,7 +20,7 @@ From these:
     A = [x_N + b, x_W + b, x_U + b] . [y_N, y_W, y_U]^-1
 
 Usage on the boat:
-    python3 calibration.py            # run the calibration, save to calib.npz
+    python3 lib/calibration.py        # run the calibration, save to calib.npz
 Usage in other scripts:
     from calibration import load_calibration, calibrate
     A, b = load_calibration()
@@ -33,9 +33,9 @@ import time
 import numpy as np
 
 # access to the drivers
-sys.path.append(os.path.join(os.path.dirname(__file__), 'drivers-ddboat-v2'))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'drivers-ddboat-v2'))
 
-CALIB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'calib.npz')
+CALIB_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'calib.npz')
 INCLINATION_DEG = 64.0  # magnetic inclination in Brest
 N_SAMPLES = 50          # measures averaged per pose
 SAMPLE_PERIOD = 0.1     # s (mag sensor runs at 10 Hz)
