@@ -146,3 +146,9 @@ Hardware drivers by the ENSTA Bretagne teaching staff, see
 The first time we put the boat on the lake to test our program, it crawled
 along and the connection was slow and laggy, so we started calling it the
 granny. *Amona* is Basque for grandmother, a nod to Unai.
+
+## License
+
+[MIT](LICENSE): feel free to reuse it, future DDBoat students included. The
+drivers in [`drivers-ddboat-v2/`](drivers-ddboat-v2/) are not covered; they
+belong to the ENSTA Bretagne teaching staff.
